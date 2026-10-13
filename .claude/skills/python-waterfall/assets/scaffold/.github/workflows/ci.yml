@@ -1,0 +1,38 @@
+# Phase 5: copy to .github/workflows/ci.yml. Python comes from .python-version via uv.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: make lint
+      - run: make typecheck
+      - run: make coverage
+      - run: make rtm
+      - run: make audit
+      - run: make build
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: reports
+          path: |
+            coverage.xml
+            rtm.json
+          if-no-files-found: ignore

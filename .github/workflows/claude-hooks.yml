@@ -1,0 +1,22 @@
+name: Claude hooks
+on:
+  push:
+    branches: [main]
+    paths: ['.claude/**', '.github/workflows/claude-hooks.yml']
+  pull_request:
+    paths: ['.claude/**', '.github/workflows/claude-hooks.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04 # 3.9 builds stop at 24.04
+    strategy:
+      matrix:
+        # Oldest python3 the hooks support (macOS system Python) and current.
+        python-version: ['3.9', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m unittest discover -s .claude/hooks/tests -v

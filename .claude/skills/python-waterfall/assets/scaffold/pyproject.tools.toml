@@ -1,0 +1,79 @@
+# Tool configuration to append to the pyproject.toml that `uv init` generates (P3, step 1).
+# Replace `PACKAGE` with the import name (e.g. `budget_cli`). Keep the generated [project]
+# and [build-system] tables; dependency versions come from `uv add`, never from this file.
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+extend-exclude = ["docs", ".claude"]  # hooks are stdlib-only, 3.9-compatible scripts
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # isort
+    "N",       # pep8-naming
+    "D",       # docstrings (google convention below)
+    "UP",      # pyupgrade
+    "B",       # bugbear
+    "A",       # builtins shadowing
+    "C4",      # comprehensions
+    "DTZ",     # timezone-aware datetimes
+    "T20",     # no print()
+    "PT",      # pytest style
+    "RET",     # return
+    "SIM",     # simplify
+    "ARG",     # unused arguments
+    "PTH",     # pathlib over os.path
+    "ERA",     # commented-out code
+    "PL",      # pylint
+    "TRY",     # exception handling
+    "PERF",    # performance
+    "S",       # bandit (security)
+    "LOG",     # logging
+    "G",       # logging format
+    "RUF",     # ruff-specific
+]
+ignore = [
+    "TRY003",  # long messages in exception constructors are fine
+    "PLR2004", # magic values are fine in comparisons; name the ones that mean something
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "ARG001", "PLR0913", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool", "possibly-undefined"]
+# Add plugins the design chooses, e.g. plugins = ["pydantic.mypy"]
+
+[tool.pytest]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+xfail_strict = true
+filterwarnings = ["error"]
+markers = [
+    "req(*ids): requirement IDs this test verifies (FR-/NFR-/AC-/DEF-/CR-###)",
+    "integration: crosses a process boundary (DB, filesystem, network, subprocess)",
+    "e2e: exercises the installed entry point or running service end to end",
+]
+
+[tool.coverage.run]
+branch = true
+patch = ["subprocess"]  # measure code run by e2e tests in child processes
+source = ["PACKAGE"]
+
+[tool.coverage.report]
+fail_under = 90  # the target agreed in 02-design.md §11
+show_missing = true
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload", "\\.\\.\\."]
